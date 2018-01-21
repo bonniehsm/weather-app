@@ -146,10 +146,9 @@
 		function getWeather(city, country){
 			var uri = "http://api.openweathermap.org/data/2.5/weather?APPID={your_registered_api_key}&units=metric&q=" +
 						city + "," + country;
-			var encodedUri = encodeURI(uri);
-			console.log(encodedUri);
-			
+			var encodedUri = encodeURI(uri);			
 			var xhr = new XMLHttpRequest();
+			
 			xhr.onreadystatechange = function(){
 				if(this.readyState == 4 && this.status == 200){
 					var weatherObj = JSON.parse(this.responseText);
