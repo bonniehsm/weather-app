@@ -1,0 +1,115 @@
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: rgba(109, 100, 100, 0.5);
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: rgba(109, 100, 100, 0.5);
+}
+:-ms-input-placeholder { /* IE 10+ */
+  color: rgba(109, 100, 100, 0.5);
+}
+:-moz-placeholder { /* Firefox 18- */
+  color: rgba(109, 100, 100, 0.5);
+}
+div {
+	color: #4c4c4c;
+}
+#map{ 
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	pointer-events: none;
+	opacity: 0.43;
+}			
+.searchAndWeatherContainer{
+	width: 30%;
+	z-index: 1000;
+	margin: 0 auto;
+	position: relative;
+	max-width: 500px;
+	min-width: 350px;
+	text-align: center;
+	font-family: 'Nunito', sans-serif;
+}
+.searchContainer { 
+	margin-left: -50px; 
+	padding: 20px 0px; 
+}
+.search{
+	width: 350px;
+	height: 50px;
+	vertical-align: top;
+	text-align: center;
+	letter-spacing: 1px;
+	font-size: 1.5em;
+	border: none;
+	background-color: rgba(255, 255, 255, 0.6);
+	color: rgba(109, 100, 100, 0.7); 
+}
+/*.hideElement { 
+	display: none; 
+}*/
+#errorMsg { 
+	font-weight: bold; 
+	letter-spacing: 1px; 
+	font-style: italic; 
+}
+#weatherInfo{
+	width: 100%;
+}
+.weatherDetails{
+	font-family: 'Open Sans', sans-serif;
+}
+#cityCountry{
+	letter-spacing: 2px;
+	word-spacing: 1px;
+}			
+#weatherDetailsOverall, #weatherDetailsExtra{
+	display: inline-block;
+	height: 200px;
+	width: 50%;
+	font-weight: 600;
+}
+#weatherDetailsOverall {	float: left; }	
+#weatherDetailsExtra {
+	text-align: left;
+	font-size: 1.2em;
+	padding-left: 20px;
+	box-sizing: border-box;
+}
+#weatherDetailsDesc { 
+	font-size: 1.2em; 
+	letter-spacing: 0.5px;
+}
+#weatherIcon{
+	transform: scale(2.5) translateY(-8px);
+	margin-left: 10px;
+	margin-right: 10px;
+}
+#tempMain{ 
+	font-size: 50pt; /* 4em; */
+	display: inline-block;
+	width: 50%;
+}
+#tempMain:after{
+	content: "\00B0 C";
+	font-size: 40%;
+	vertical-align: super;
+}
+#tempMin:after, #tempMax:after{
+	content: "\00B0 C";
+	font-size: 60%;
+	vertical-align: super;
+}
+#weatherDetailsDesc::first-letter{
+	text-transform: uppercase;
+	font-size: 1.2em;
+}					
+:before { letter-spacing: 0.5px;}
+#tempMin:before{ content: 'Low: ';}
+#tempMax:before{ content: 'High: ';}
+#sunriseTime:before{ content: 'Sunrise: '; }
+#sunsetTime:before { content: 'Sunset: '; }

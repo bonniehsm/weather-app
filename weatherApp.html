@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">	
+		<title>How's the weather?</title>
+		<link href="https://fonts.googleapis.com/css?family=Nunito|Open+Sans" rel="stylesheet">
+		<link href="css/weather-icons.css" rel="stylesheet">
+		<link href="css/styles.css" rel="stylesheet">
+	</head>
+
+	<body>
+		<div class="searchAndWeatherContainer">
+			<div class="searchContainer">
+				<svg width="50" height="50" viewBox="0 0 25 25">
+					<path d="M20.067 18.933l-4.157-4.157a6 6 0 1 0-.884.884l4.157 4.157a.624.624 0 1 0 .884-.884zM6.5 11c0-2.62 2.13-4.75 4.75-4.75S16 8.38 16 11s-2.13 4.75-4.75 4.75S6.5 13.62 6.5 11z" fill="#6d6464">
+					</path>
+				</svg>
+				<input class="search" id="searchInput" type="text" placeholder="Type your location here">
+				<p id="errorMsg"> * Please select a location from the dropdown.</p>
+			</div>
+			<div class="weatherInfo">
+				<div class="weatherDetails">
+					<h1 id="cityCountry"></h1>
+					<div id="weatherDetailsOverall">
+						<p id="weatherDetailsDesc"></p>
+						<div>
+							<i id="weatherIcon" class="icon"></i>
+							<div id="tempMain" class="temperature"></div>
+						</div>
+					</div>	
+					<div id="weatherDetailsExtra">
+						<div>
+							<p id="tempMin" class="temperature"></p>
+							<p id="tempMax" class="temperature"></p>
+						</div>
+						<div>
+							<p id="sunriseTime"></p>
+							<p id="sunsetTime"></p>
+						</div>
+					</div>
+				</div>
+			</div>			
+		</div>
+		<div id="map" class="map"></div>		
+		<div id="overlay"></div>
+	</body>
+	<script>
+		/** Global variables **/			
+		var searchInputField = document.getElementById('searchInput');
+		var coords = { lat: 43.7701199, lng: -79.40849279999999 },
+				position = {};
+		var autocomplete = {};
+
+		/*** Event Listeners **/
+		searchInputField.addEventListener('focus', geolocate);
+
+		//bias the autocomplete object to the user's geographical location as supplied by the browser's 'navigator.geolocation' object 	
+		function geolocate(){
+			var circle = new google.maps.Circle({
+			  center: coords,
+			  radius: 13000 		//meters
+			});
+			autocomplete.setBounds(circle.getBounds());
+		}
+
+		//create the Google Maps object
+		function initAutocomplete(){			
+			let errorMsg = document.getElementById('errorMsg');
+			errorMsg.style.visibility = "hidden";
+
+			var map = new google.maps.Map(document.getElementById('map'), {
+				center: { lat: coords.lat, lng: coords.lng },
+				zoom: 10
+			});
+
+			var marker = new google.maps.Marker({
+				position: { lat: coords.lat, lng: coords.lng },
+				map: map,
+			});
+
+			/** Set Autocomplete object **/
+			var input = document.getElementById('searchInput');
+			var options = { types: ['(cities)'] }; 
+
+			autocomplete = new google.maps.places.Autocomplete( input, options );
+
+			//bind the map's bounds (viewport) property to the autocomplete object,
+			// so that the autocomplete requests use the current map bounds for the bounds option in the request
+			autocomplete.bindTo('bounds', map);
+
+			autocomplete.addListener('place_changed', function(){
+				errorMsg.style.visibility = "hidden";
+				marker.setVisible(false);
+
+				var place = autocomplete.getPlace();
+
+				if(!place.geometry){
+					//user entered the name of a place that was not suggested and pressed the Enter key,
+					// or the Place Details request failed
+					errorMsg.style.visibility = "visible";
+					return;
+				}
+
+				//get city and country
+				var component = { locality: 'long_name', country: 'long_name' };
+				var city = '', country = '';
+				var cityFound = false;
+				for(var i = 0; i < place.address_components.length; i++){
+					var addressType = place.address_components[i].types[0];
+					if(addressType == "locality"  || (addressType == "administrative_area_level_1" && cityFound == false)){
+						city = place.address_components[i].long_name;
+						cityFound = true;
+					}else if(addressType == "country"){
+						//gives long name of country (use short_name for country code)
+						country = place.address_components[i].short_name;				
+					}
+				}
+				if(!cityFound){
+					document.getElementById("errorMsg").classList.remove('hideElement');
+					return;
+				}else{
+					document.getElementById("errorMsg").classList.add('hideElement');
+				}
+
+				getWeather(city, country);
+
+				//if the place has a geometry, then present it on a map
+				if(place.geometry.viewport){
+					map.fitBounds(place.geometry.viewport);
+				}else{
+					map.setCenter(place.geometry.location);
+					map.setZoom(17);
+				}
+
+				marker.setPosition(place.geometry.location);
+				marker.setVisible(true);
+
+			});	//autocomplete listener
+
+			getWeather("Toronto", "CA");
+
+		}	//initAutocomplete function
+		
+
+		function getWeather(city, country){
+			var uri = "http://api.openweathermap.org/data/2.5/weather?APPID={your_registered_api_key}&units=metric&q=" +
+						city + "," + country;
+			var encodedUri = encodeURI(uri);
+			console.log(encodedUri);
+			
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function(){
+				if(this.readyState == 4 && this.status == 200){
+					var weatherObj = JSON.parse(this.responseText);
+					displayWeatherInfo(weatherObj, city, country);
+				}else if(this.readyState == 4 && this.status == 404){
+					document.getElementById("errorMsg").classList.remove('hideElement');
+					return;
+				}
+			};
+			xhr.open("GET", encodedUri, true);
+			xhr.send();
+		}
+
+		function displayWeatherInfo(data, city, country){
+			var cityCountryHeading 	= document.getElementById('cityCountry'),
+				weatherInfoDesc		= document.getElementById('weatherInfoDesc'),
+				weatherIcon			= document.getElementById('weatherIcon'),
+				temp				= document.getElementById('tempMain'),
+				tempMin				= document.getElementById('tempMin'),
+				tempMax				= document.getElementById('tempMax'),		
+				sunrise 			= document.getElementById('sunriseTime'),
+				sunset 				= document.getElementById('sunsetTime');
+			var sunriseDate = new Date(data.sys.sunrise * 1000),
+				sunsetDate  = new Date(data.sys.sunset * 1000);
+			var sunriseTime = sunriseDate.toLocaleTimeString(),
+				sunsetTime 	= sunsetDate.toLocaleTimeString();
+
+			cityCountryHeading.innerHTML = city + ', ' + country;
+			weatherDetailsDesc.innerHTML = data.weather[0].description;
+			temp.innerHTML = Math.round(data.main.temp);
+			tempMin.innerHTML = Math.round(data.main.temp_min);
+			tempMax.innerHTML = Math.round(data.main.temp_max);
+			sunrise.innerHTML = sunriseTime;
+			sunset.innerHTML = sunsetTime;	
+			var timeOfDay = data.dt < data.sys.sunset ? "D" : "N";
+			getIcon(data.weather[0].id, timeOfDay);
+		}
+
+		function getIcon(weatherConditionCode, timeOfDay){	
+			var icon;// = "wi ";
+			var iconElement = document.getElementById("weatherIcon");
+			//get icon class
+			if(weatherConditionCode < 300){
+				//Group 2xx: Thunderstorm
+				icon = timeOfDay == "D" ? "wi-owm-day-230" : 	"wi-owm-night-230";  //day-thunderstorm : night-alt-thunderstorm
+			}else if(weatherConditionCode < 600){
+				//Group 3xx: Drizzle		
+				//Group 5xx: Rain	
+				icon = timeOfDay == "D" ? "wi-owm-day-302" : "wi-owm-night-300";	//day-rain : night-alt-rain
+			}else if(weatherConditionCode < 700){
+				//Group 6xx: Snow
+				icon = timeOfDay == "D" ? "wi-owm-day-600" : "wi-owm-night-600";	// day-snow : night-alt-snow
+			}else if(weatherConditionCode < 800){
+				//Group 7xx: Atmosphere
+				icon = "wi-owm-741";  										//fog (neutral)
+			}else if(weatherConditionCode < 900){
+				if(weatherConditionCode == 800){ 					//Group 800: Clear
+					icon = timeOfDay == "D" ? "wi-owm-800" : "wi-owm-night-800";
+				}else{																		//Group 80x: Clouds
+					icon = timeOfDay == "D" ? "wi-owm-804" : "wi-owm-night-804";
+				}
+			}else{					//Group 90x: Extreme
+				if(weatherConditionCode == 900){					//tornado
+					icon = "wi-owm-781";
+				}else if(weatherConditionCode == 901 || weatherConditionCode == 902 || weatherConditionCode == 962){		//hurricane
+					icon = "wi-owm-902";
+				}else if(weatherConditionCode == 903){		//cold
+					icon = "wi-owm-903";					//snowflake-cold
+				}else if(weatherConditionCode == 904){		//hot
+					icon = "wi-owm-904";
+				}else if(weatherConditionCode == 905){		//windy
+					icon = "wi-owm-905";
+				}else if(weatherConditionCode == 906 || (weatherConditionCode >= 951 && weatherConditionCode <= 956)){		//hail or breeze
+					icon = "wi-owm-906";
+				}else if(weatherConditionCode >= 957 && weatherConditionCode <= 959){		//gale
+					icon = "wi-owm-957";
+				}else if(weatherConditionCode >= 960 && weatherConditionCode <= 961){		//storm
+					icon = timeOfDay == "D" ? "wi-owm-day-200" : "wi-owm-night-200";
+				}
+			}
+
+			//remove any CSS class from the element 
+			iconElement.className = '';
+			//add css class to the icon element
+			iconElement.classList.add('wi');
+			iconElement.classList.add(icon);
+		}
+	</script>
+	<script src="https://maps.googleapis.com/maps/api/js?key={your_registered_api_key}&libraries=places&callback=initAutocomplete"
+    async defer></script>  	
+</html>
