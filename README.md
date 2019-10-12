@@ -5,6 +5,6 @@
 
 ### Screenshots of the application:
 
-![UI Screenshot 1](/images/ui_screenshot_1.PNG?raw=true "Landing Viewe")
+![UI Screenshot 1](/images/ui_screenshot_1.PNG?raw=true)
 
-![UI Screenshot 2](/images/ui_screenshot_2.PNG?raw=true)
+![UI Screenshot 2](/images/ui_screenshot_3.PNG?raw=true)
